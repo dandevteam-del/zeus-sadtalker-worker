@@ -37,7 +37,7 @@ RUN pip install --no-build-isolation basicsr==1.4.2 facexlib==0.3.0 gfpgan==1.3.
 RUN pip install \
         face_alignment==1.3.5 imageio==2.19.3 imageio-ffmpeg==0.4.7 \
         librosa==0.10.1 numba resampy==0.4.2 pydub==0.25.1 scipy==1.10.1 \
-        kornia==0.6.8 tqdm yacs==0.1.8 pyyaml joblib scikit-image==0.21.0 \
+        kornia==0.6.8 tqdm yacs==0.1.8 pyyaml joblib scikit-image==0.19.3 \
         av safetensors runpod requests
 
 # basicsr (used by gfpgan) imports torchvision.transforms.functional_tensor, which
