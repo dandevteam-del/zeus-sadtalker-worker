@@ -31,8 +31,14 @@ VOL = "/runpod-volume"
 MODELS = f"{VOL}/sadtalker"                 # persistent weights on the volume
 CKPT = f"{MODELS}/checkpoints"
 GFP = f"{MODELS}/gfpgan/weights"
-for d in (CKPT, GFP, f"{VOL}/tmp"):
+for d in (CKPT, GFP, f"{VOL}/tmp", f"{VOL}/hf", f"{VOL}/torch"):
     os.makedirs(d, exist_ok=True)
+# Point caches/tmp at the volume at RUNTIME (the volume is mounted now). These are
+# deliberately NOT Docker ENV — that would break the image build (volume absent).
+os.environ.setdefault("HOME", VOL)
+os.environ.setdefault("TMPDIR", f"{VOL}/tmp")
+os.environ.setdefault("HF_HOME", f"{VOL}/hf")
+os.environ.setdefault("TORCH_HOME", f"{VOL}/torch")
 
 # SadTalker reads ./checkpoints and ./gfpgan/weights relative to its dir — point
 # those at the volume so the (large) weights persist across cold starts.

@@ -5,14 +5,14 @@
 # model weights + caches live on the attached NETWORK VOLUME (/runpod-volume).
 FROM nvidia/cuda:12.1.0-devel-ubuntu22.04
 
+# NOTE: do NOT point HOME/TMPDIR at /runpod-volume here — the network volume is
+# only mounted at RUNTIME, not during the image build, so build-time apt/dpkg
+# (ca-certificates postinst uses TMPDIR via mktemp) would fail. handler.py sets
+# HOME/TMPDIR/HF_HOME onto the volume at runtime instead.
 ENV DEBIAN_FRONTEND=noninteractive \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
-    SADTALKER_DIR=/app/SadTalker \
-    HOME=/runpod-volume \
-    HF_HOME=/runpod-volume/hf \
-    TORCH_HOME=/runpod-volume/torch \
-    TMPDIR=/runpod-volume/tmp
+    SADTALKER_DIR=/app/SadTalker
 
 WORKDIR /app
 
