@@ -29,12 +29,16 @@ RUN pip install torch==2.1.0 torchvision==0.16.0 torchaudio==2.1.0 \
 
 RUN git clone --depth 1 https://github.com/OpenTalker/SadTalker.git /app/SadTalker
 
-# SadTalker's deps, pinned to a set that works with torch 2.1.
+# SadTalker's deps. ORDER MATTERS: numpy first, then basicsr/gfpgan with
+# --no-build-isolation (their setup.py imports torch+numpy; pip's default isolated
+# build env can't see them → the classic "No module named 'torch'" build failure).
+RUN pip install numpy==1.23.5
+RUN pip install --no-build-isolation basicsr==1.4.2 facexlib==0.3.0 gfpgan==1.3.8
 RUN pip install \
-        numpy==1.23.5 face_alignment==1.3.5 imageio==2.19.3 imageio-ffmpeg==0.4.7 \
+        face_alignment==1.3.5 imageio==2.19.3 imageio-ffmpeg==0.4.7 \
         librosa==0.10.1 numba resampy==0.4.2 pydub==0.25.1 scipy==1.10.1 \
         kornia==0.6.8 tqdm yacs==0.1.8 pyyaml joblib scikit-image==0.21.0 \
-        basicsr==1.4.2 facexlib==0.3.0 gfpgan==1.3.8 av safetensors runpod requests
+        av safetensors runpod requests
 
 # basicsr (used by gfpgan) imports torchvision.transforms.functional_tensor, which
 # was removed in torchvision>=0.17 — repoint it to the current module. Single-line
