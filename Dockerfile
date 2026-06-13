@@ -37,17 +37,9 @@ RUN pip install \
         basicsr==1.4.2 facexlib==0.3.0 gfpgan==1.3.8 av safetensors runpod requests
 
 # basicsr (used by gfpgan) imports torchvision.transforms.functional_tensor, which
-# was removed in torchvision>=0.17 — repoint it to the current module. Same for
-# the well-known degradations.py import.
-RUN python3 - <<'PY'
-import os, basicsr, re
-f = os.path.join(os.path.dirname(basicsr.__file__), "data", "degradations.py")
-s = open(f).read().replace(
-    "from torchvision.transforms.functional_tensor import rgb_to_grayscale",
-    "from torchvision.transforms.functional import rgb_to_grayscale")
-open(f, "w").write(s)
-print("patched", f)
-PY
+# was removed in torchvision>=0.17 — repoint it to the current module. Single-line
+# RUN (no heredoc) so it builds on any Docker builder, BuildKit or not.
+RUN python3 -c "import os,basicsr; f=os.path.join(os.path.dirname(basicsr.__file__),'data','degradations.py'); s=open(f).read().replace('functional_tensor','functional'); open(f,'w').write(s); print('patched',f)"
 
 ENV PYTHONPATH="/app/SadTalker:${PYTHONPATH}"
 COPY handler.py /app/handler.py
