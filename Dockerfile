@@ -36,7 +36,7 @@ RUN pip install numpy==1.23.5
 RUN pip install --no-build-isolation basicsr==1.4.2 facexlib==0.3.0 gfpgan==1.3.8
 RUN pip install \
         face_alignment==1.3.5 imageio==2.19.3 imageio-ffmpeg==0.4.7 \
-        librosa==0.10.1 numba resampy==0.4.2 pydub==0.25.1 scipy==1.10.1 \
+        librosa==0.10.1 numba==0.57.1 resampy==0.4.2 pydub==0.25.1 scipy==1.10.1 \
         kornia==0.6.8 tqdm yacs==0.1.8 pyyaml joblib scikit-image==0.19.3 \
         av safetensors runpod requests
 
@@ -44,6 +44,18 @@ RUN pip install \
 # was removed in torchvision>=0.17 — repoint it to the current module. Single-line
 # RUN (no heredoc) so it builds on any Docker builder, BuildKit or not.
 RUN python3 -c "import os,basicsr; f=os.path.join(os.path.dirname(basicsr.__file__),'data','degradations.py'); s=open(f).read().replace('functional_tensor','functional'); open(f,'w').write(s); print('patched',f)"
+
+# SadTalker's vendored code (e.g. src/face3d/util/my_awing_arch.py) still uses the
+# np.float / np.int / np.bool aliases removed in NumPy>=1.24. Rewrite them to the
+# builtins across the whole tree, word-boundary aware so np.float64/np.int32 survive.
+COPY patch_np.py /app/patch_np.py
+RUN python3 /app/patch_np.py /app/SadTalker
+
+# Re-assert the numpy pin LAST so nothing in the batch above leaves a >=1.24 numpy
+# (which would remove np.float and break 3DMM landmark extraction). Fail the build
+# loudly if the alias is gone.
+RUN pip install --force-reinstall --no-deps numpy==1.23.5 && \
+    python3 -c "import numpy as np; print('numpy', np.__version__); assert hasattr(np,'float'), 'np.float missing — numpy got upgraded'"
 
 ENV PYTHONPATH="/app/SadTalker:${PYTHONPATH}"
 COPY handler.py /app/handler.py
